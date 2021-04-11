@@ -103,10 +103,10 @@ class TypeAnalysis(program: AProgram)(implicit declData: DeclarationData) extend
     node match {
       case program: AProgram => unify(node, IntType());
       case _: ANumber => unify(node, IntType());
-      case _: AInput => ??? // <--- Complete here
-      case is: AIfStmt => unify(is.guard, IntType());
-      case os: AOutputStmt => ??? // <--- Complete here
-      case ws: AWhileStmt => ??? // <--- Complete here
+      case _: AInput => unify(node, IntType());
+      case is: AIfStmt => ??? // unify(is.guard, IntType());
+      case os: AOutputStmt => ??? // unify(os.exp, IntType());
+      case ws: AWhileStmt => ??? // unify(ws.guard, IntType());
       case as: AAssignStmt =>
         as.left match {
           case id: AIdentifier => unify(id, as.right);
@@ -126,7 +126,7 @@ class TypeAnalysis(program: AProgram)(implicit declData: DeclarationData) extend
       case alloc: AAlloc => ??? // <--- Complete here
       case ref: AVarRef => ??? // <--- Complete here
       case n: ANull => unify(n, PointerType(FreshVarType()));
-      case fun: AFunDeclaration => ??? // <--- Complete here
+      case fun: AFunDeclaration => unify(fun, IntType()); // <--- Complete here
       case call: ACallFuncExpr => ??? // <--- Complete here
       case _: AReturnStmt =>
       case rec: ARecord =>
