@@ -1,8 +1,17 @@
 short() {
-    var w, x, y, z;
+    var a, b, w, x, y, z;
     x = input;
     y = alloc x;
     *z = x;
     w = *z;
+
+    if (1 > 2) {
+        a = 2;
+    }
+
+    while (x == 1) {
+        b = 5;
+    }
+
     return x;
 }

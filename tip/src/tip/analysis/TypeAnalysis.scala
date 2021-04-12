@@ -101,7 +101,7 @@ class TypeAnalysis(program: AProgram)(implicit declData: DeclarationData) extend
   def visit(node: AstNode, arg: Unit): Unit = {
     log.verb(s"Visiting ${node.getClass.getSimpleName} at ${node.loc}")
     node match {
-      case program: AProgram => unify(node, IntType());
+      case program: AProgram => ??? // Complete
       case _: ANumber => unify(node, IntType());
       case _: AInput => unify(node, IntType());
       case is: AIfStmt => unify(is.guard, IntType());
@@ -110,9 +110,9 @@ class TypeAnalysis(program: AProgram)(implicit declData: DeclarationData) extend
       case as: AAssignStmt =>
         as.left match {
           case id: AIdentifier => unify(id, as.right);
-          case dw: ADerefWrite => unify(dw.exp, IntType());
-          case dfw: ADirectFieldWrite => unify(dfw.id, IntType());
-          case ifw: AIndirectFieldWrite => unify(ifw.exp, IntType());
+          case dw: ADerefWrite => unify(dw.exp, PointerType(as.right));
+          case dfw: ADirectFieldWrite => unify(dfw.id, VarType(dfw.id));
+          case ifw: AIndirectFieldWrite => unify(ifw.exp, VarType(ifw.exp));
         }
       case bin: ABinaryOp =>
         bin.operator match {
@@ -121,10 +121,10 @@ class TypeAnalysis(program: AProgram)(implicit declData: DeclarationData) extend
         }
       case un: AUnaryOp =>
         un.operator match {
-          case DerefOp => unify(un, PointerType(FreshVarType()));
+          case DerefOp => unify(un.subexp, PointerType(un));
         }
-      case alloc: AAlloc => unify(alloc, PointerType(FreshVarType()));
-      case ref: AVarRef => unify(ref, FreshVarType());
+      case alloc: AAlloc => unify(alloc, PointerType(alloc.exp));
+      case ref: AVarRef => unify(ref, PointerType(ref.id));
       case n: ANull => unify(n, PointerType(FreshVarType()));
       case fun: AFunDeclaration => unify(fun, IntType());
       case call: ACallFuncExpr => unify(call.targetFun, IntType());
