@@ -1,10 +1,8 @@
-main() {
-  var x,y,z,a;
-  x = null;
-  y = &x;
-  z = &x;
-  z = &y;
-  a = *z;
-  *a = null;
-  return 0;
+short() {
+    var w, x, y, z;
+    x = input;
+    y = alloc x;
+    *z = x;
+    w = *z;
+    return x;
 }

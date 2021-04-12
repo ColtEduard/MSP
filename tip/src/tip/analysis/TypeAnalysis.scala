@@ -10,18 +10,18 @@ import AstOps._
 import scala.collection.mutable
 
 /**
-  * Unification-based type analysis.
-  * The analysis associates a [[tip.types.Type]] with each variable declaration and expression node in the AST.
-  * It is implemented using [[tip.solvers.UnionFindSolver]].
-  *
-  * To novice Scala programmers:
-  * The parameter `declData` is declared as "implicit", which means that invocations of `TypeAnalysis` obtain its value implicitly:
-  * The call to `new TypeAnalysis` in Tip.scala does not explicitly provide this parameter, but it is in scope of
-  * `implicit val declData: TypeData = new DeclarationAnalysis(programNode).analyze()`.
-  * The TIP implementation uses implicit parameters many places to provide easy access to the declaration information produced
-  * by `DeclarationAnalysis` and the type information produced by `TypeAnalysis`.
-  * For more information about implicit parameters in Scala, see [[https://docs.scala-lang.org/tour/implicit-parameters.html]].
-  */
+ * Unification-based type analysis.
+ * The analysis associates a [[tip.types.Type]] with each variable declaration and expression node in the AST.
+ * It is implemented using [[tip.solvers.UnionFindSolver]].
+ *
+ * To novice Scala programmers:
+ * The parameter `declData` is declared as "implicit", which means that invocations of `TypeAnalysis` obtain its value implicitly:
+ * The call to `new TypeAnalysis` in Tip.scala does not explicitly provide this parameter, but it is in scope of
+ * `implicit val declData: TypeData = new DeclarationAnalysis(programNode).analyze()`.
+ * The TIP implementation uses implicit parameters many places to provide easy access to the declaration information produced
+ * by `DeclarationAnalysis` and the type information produced by `TypeAnalysis`.
+ * For more information about implicit parameters in Scala, see [[https://docs.scala-lang.org/tour/implicit-parameters.html]].
+ */
 class TypeAnalysis(program: AProgram)(implicit declData: DeclarationData) extends DepthFirstAstVisitor[Unit] with Analysis[TypeData] {
 
   val log = Log.logger[this.type]()
@@ -31,8 +31,8 @@ class TypeAnalysis(program: AProgram)(implicit declData: DeclarationData) extend
   implicit val allFieldNames: List[String] = program.appearingFields.toList.sorted
 
   /**
-    * @inheritdoc
-    */
+   * @inheritdoc
+   */
   def analyze(): TypeData = {
 
     // generate the constraints by traversing the AST and solve them on-the-fly
@@ -94,25 +94,25 @@ class TypeAnalysis(program: AProgram)(implicit declData: DeclarationData) extend
   }
 
   /**
-    * Generates the constraints for the given sub-AST.
-    * @param node the node for which it generates the constraints
-    * @param arg unused for this visitor
-    */
+   * Generates the constraints for the given sub-AST.
+   * @param node the node for which it generates the constraints
+   * @param arg unused for this visitor
+   */
   def visit(node: AstNode, arg: Unit): Unit = {
     log.verb(s"Visiting ${node.getClass.getSimpleName} at ${node.loc}")
     node match {
       case program: AProgram => unify(node, IntType());
       case _: ANumber => unify(node, IntType());
       case _: AInput => unify(node, IntType());
-      case is: AIfStmt => ??? // unify(is.guard, IntType());
-      case os: AOutputStmt => ??? // unify(os.exp, IntType());
-      case ws: AWhileStmt => ??? // unify(ws.guard, IntType());
+      case is: AIfStmt => unify(is.guard, IntType());
+      case os: AOutputStmt => unify(os.exp, IntType());
+      case ws: AWhileStmt => unify(ws.guard, IntType());
       case as: AAssignStmt =>
         as.left match {
           case id: AIdentifier => unify(id, as.right);
-          case dw: ADerefWrite => ??? // <--- Complete here
-          case dfw: ADirectFieldWrite => ??? // <--- Complete here
-          case ifw: AIndirectFieldWrite => ??? // <--- Complete here
+          case dw: ADerefWrite => unify(dw.exp, IntType());
+          case dfw: ADirectFieldWrite => unify(dfw.id, IntType());
+          case ifw: AIndirectFieldWrite => unify(ifw.exp, IntType());
         }
       case bin: ABinaryOp =>
         bin.operator match {
@@ -121,13 +121,13 @@ class TypeAnalysis(program: AProgram)(implicit declData: DeclarationData) extend
         }
       case un: AUnaryOp =>
         un.operator match {
-          case DerefOp => ??? // <--- Complete here
+          case DerefOp => unify(un, PointerType(FreshVarType()));
         }
-      case alloc: AAlloc => ??? // <--- Complete here
-      case ref: AVarRef => ??? // <--- Complete here
+      case alloc: AAlloc => unify(alloc, PointerType(FreshVarType()));
+      case ref: AVarRef => unify(ref, FreshVarType());
       case n: ANull => unify(n, PointerType(FreshVarType()));
-      case fun: AFunDeclaration => unify(fun, IntType()); // <--- Complete here
-      case call: ACallFuncExpr => ??? // <--- Complete here
+      case fun: AFunDeclaration => unify(fun, IntType());
+      case call: ACallFuncExpr => unify(call.targetFun, IntType());
       case _: AReturnStmt =>
       case rec: ARecord =>
         val fieldmap = rec.fields.foldLeft(Map[String, Term[Type]]()) { (a, b) =>
